@@ -26,7 +26,7 @@
         cleanWs()
     }
     stage("Clone Repo"){
-        git branch: 'main', url: 'https://github.com/satender346/IaC-eks-example.git'
+        git branch: 'main', url: 'https://github.com/chinastockproducts/devops-automation.git'
     }
     stage("Create EKS cluster"){
         sh """
