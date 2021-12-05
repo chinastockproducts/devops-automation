@@ -26,7 +26,7 @@
         cleanWs()
     }
     stage("Clone Repo"){
-        git branch: 'main', url: 'https://github.com/satender346/IaC-eks-example.git'
+        git branch: 'main', url: 'https://github.com/chinastockproducts/Iac-eks.git'
     }
     stage("Create EKS cluster"){
         sh """
@@ -88,71 +88,33 @@
         """
     }
     stage("Consul Deployment") {
-     sh "git clone https://github.com/hashicorp/consul-helm.git"
-     sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; kubectl create ns consul &amp;&amp; helm install consul ./consul-helm --namespace consul &amp;&amp; kubectl get all -n consul"
+        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; kubectl create ns infra &amp;&amp; helm repo add hashicorp https://helm.releases.hashicorp.com &amp;&amp; helm repo update &amp;&amp; helm install consul hashicorp/consul --set global.name=consul -n infra --set server.replicas=1 --set service.type=LoadBalancer &amp;&amp; kubectl get all -n infra"
     }
     stage("Deploy Vault") {
-        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; kubectl create ns vault &amp;&amp; helm repo add hashicorp https://helm.releases.hashicorp.com &amp;&amp; helm repo update &amp;&amp; helm install vault hashicorp/vault --namespace vault &amp;&amp; kubectl get all -n vault"
+        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; helm repo add hashicorp https://helm.releases.hashicorp.com &amp;&amp; helm repo update &amp;&amp; helm install vault hashicorp/vault -n infra --set service.type=LoadBalancer &amp;&amp; kubectl get all -n infra"
     }
     stage("Deploy Sonarqube") {
-        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube &amp;&amp; helm repo update &amp;&amp; kubectl create namespace sonarqube &amp;&amp; helm upgrade --install -n sonarqube sonarqube sonarqube/sonarqube &amp;&amp; kubectl get all -n sonarqube"
+        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube &amp;&amp; helm repo update &amp;&amp; helm install sonarqube sonarqube/sonarqube -n infra --set service.type=LoadBalancer &amp;&amp; kubectl get all -n infra"
     }
     stage("Deploy Nexus") {
-        sh """
-           cat &lt;&lt; EOF &gt; deployment.yaml
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: nexus
-      namespace: nexus
-    spec:
-      replicas: 1
-      selector:
-        matchLabels:
-            app: nexus-server
-      template:
-        metadata:
-          labels:
-            app: nexus-server
-        spec:
-          containers:
-            - name: nexus
-              image: sonatype/nexus3:latest
-              resources:
-                limits:
-                  memory: "1Gi"
-                  cpu: "1000m"
-                requests:
-                  memory: "1Gi"
-                  cpu: "500m"
-              ports:
-                - containerPort: 8081
-              volumeMounts:
-                - name: nexus-data
-                  mountPath: /nexus-data
-          volumes:
-            - name: nexus-data
-              emptyDir: {}
-
-EOF
-
-
-        """
-        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig  &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; kubectl create namespace nexus &amp;&amp; kubectl create -f deployment.yaml &amp;&amp; kubectl get all -n nexus"
+        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig  &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; helm repo add sonatype https://sonatype.github.io/helm3-charts/ &amp;&amp; helm repo update &amp;&amp;  helm install nexus-rm sonatype/nexus-repository-manager -n infra --set service.type=LoadBalancer &amp;&amp; kubectl get all -n infra"
     }
     stage("Deploy Jenkins") {
         sh """
-         source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; kubectl create ns jenkins &amp;&amp; helm repo add bitnami https://charts.bitnami.com/bitnami &amp;&amp; helm install jenkins bitnami/jenkins -n jenkins &amp;&amp; kubectl get all -n jenkins
+         source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; helm repo add bitnami https://charts.bitnami.com/bitnami &amp;&amp; helm install jenkins bitnami/jenkins -n infra --set service.type=LoadBalancer &amp;&amp; kubectl get all -n infra
         """
     }
     stage("Deploy Prometheus"){
-        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig  &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; kubectl create namespace monitoring &amp;&amp; helm repo add prometheus-community https://prometheus-community.github.io/helm-charts &amp;&amp; helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics &amp;&amp; helm repo update &amp;&amp; helm install prometheus prometheus-community/prometheus -n monitoring &amp;&amp; kubectl get all -n monitoring"
+        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig  &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; helm repo add prometheus-community https://prometheus-community.github.io/helm-charts &amp;&amp; helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics &amp;&amp; helm repo update &amp;&amp; helm install prometheus prometheus-community/prometheus -n infra --set service.type=LoadBalancer &amp;&amp; kubectl get all -n infra"
+    }    
+    stage("Deploy EFK") {
+	sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; helm repo add stable https://charts.helm.sh/stable &amp;&amp; helm install elasticsearch stable/elasticsearch -n infra --set service.type=LoadBalancer &amp;&amp; helm install kibana stable/kibana -n infra --set service.type=LoadBalancer &amp;&amp; helm install fluentd stable/fluentd-elasticsearch -n infra --set service.type=LoadBalancer &amp;&amp; kubectl get all -n infra"
     }
     stage("Deploy Grafana") {
-        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig  &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; helm repo add bitnami https://charts.bitnami.com/bitnami &amp;&amp; helm install grafana bitnami/grafana -n monitoring &amp;&amp; kubectl get all -n monitoring"
+        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig  &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; helm repo add bitnami https://charts.bitnami.com/bitnami &amp;&amp; helm install grafana bitnami/grafana -n infra --set service.type=LoadBalancer &amp;&amp; kubectl get all -n infra"
     }
     stage("Deploy Jaeger"){
-        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; kubectl create ns jaeger &amp;&amp; helm repo add jaegertracing https://jaegertracing.github.io/helm-charts &amp;&amp; helm install jaeger jaegertracing/jaeger -n jaeger"
+        sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; helm repo add jaegertracing https://jaegertracing.github.io/helm-charts &amp;&amp; helm install jaeger jaegertracing/jaeger -n infra --set service.type=LoadBalancer &amp;&amp; kubectl get all -n infra"
     }
     stage("Display All resource"){
         sh "source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin &amp;&amp; kubectl get all --all-namespaces"
