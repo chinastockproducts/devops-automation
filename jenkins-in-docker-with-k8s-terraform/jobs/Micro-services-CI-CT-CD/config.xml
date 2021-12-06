@@ -26,18 +26,17 @@
         cleanWs()
     }
     stage("Clone repo") {
-     sh "cd /var/jenkins_home/ &amp;&amp; git clone https://github.com/satender346/go-gin-react-sample-app.git"
+     sh "cd /var/jenkins_home/ &amp;&amp; git clone https://github.com/chinastockproducts/app.git"
     }
-    stage("Deploy GO-React-APP") {
+    stage("Deploy GOAPP") {
         sh """
-          cd /var/jenkins_home/go-gin-react-sample-app
+          cd /var/jenkins_home/app/go-k8s
           export KUBECONFIG=/var/jenkins_home/kubeconfig
-          kubectl apply -f go-react-demo-app-deployment.yaml 
-          kubectl apply -f go-react-demo-app-service.yaml
-          kubectl get po  
-          kubectl get svc
+          helm install goapp ./helm-chart/
+          kubectl get po | grep goapp
+          kubectl get svc | grep go
           
-          echo 'App is running on instance-ip:30070'
+          echo 'App is running on instance-ip:3000'
         """
     }
 }</script>
