@@ -41,9 +41,9 @@
           cd /var/jenkins_home/app/go-k8s
           source /var/jenkins_home/aws_credentials &amp;&amp; export KUBECONFIG=/var/jenkins_home/kubeconfig &amp;&amp; export PATH=$PATH:$HOME/bin
           export KUBECONFIG=/var/jenkins_home/kubeconfig
-          helm install goapp ./helm-chart/
-          kubectl get po | grep goapp
-          kubectl get svc | grep go
+          helm install goapp ./helm-chart/ -n infra
+          kubectl get po -n infra | grep goapp
+          kubectl get svc -n infra | grep go
           
           echo 'App is running on instance-ip:3000'
         """
