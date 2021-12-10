@@ -61,7 +61,7 @@
     
     stage("Deploy EFK") {
         sh """
-           cat << EOF > kibana.yaml
+           cat &lt;&lt; EOF &gt; kibana.yaml
 files:
   kibana.yml:
     server.name: kibana
