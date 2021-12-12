@@ -53,3 +53,9 @@ cp -r jenkins-in-docker-with-k8s-terraform/* .
 sudo docker build -t jenkins-lts .
 sudo docker run -d --name=jenkins-master --restart=always -p 8080:8080 -p 50000:50000 -v /var/jenkins_home:/var/jenkins_home jenkins-lts:latest
 
+# Kubectl and EKSCTL setup
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.20.4/2021-04-12/bin/linux/amd64/kubectl
+sudo mv kubectl /usr/local/bin; chmod ugo+x /usr/local/bin/kubectl
+
